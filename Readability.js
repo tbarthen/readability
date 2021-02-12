@@ -243,7 +243,7 @@ Readability.prototype = {
   ],
 
   // These are the classes that readability sets itself.
-  CLASSES_TO_PRESERVE: ["page"],
+  CLASSES_TO_PRESERVE: ["page", "caption"],
 
   // These are the list of HTML entities that need to be escaped.
   HTML_ESCAPE_MAP: {
