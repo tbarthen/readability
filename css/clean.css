@@ -52,9 +52,22 @@ ol {
 }
 img {
    padding: 0 1.5em 1.5em 0;
-   max-width: 40em; 
+   max-width: 40em;
    float: left;
    clear: left;
+}
+
+figure {
+  margin: 1em 0;
+  clear: both;
+}
+
+figcaption {
+  font-size: 14px;
+  font-style: italic;
+  color: #666;
+  margin-top: 0.5em;
+  line-height: 1.4;
 }
 
 a {
@@ -80,11 +93,4 @@ pre > code {
 
 .articleTitle {
   padding: 0 .5em 0 .5em;
-}
-
-/* Ideally, I would like to use aria-hidden="true" - so readers ignore these nodes.
-    Unfortunately IOS reads them anyway - so I'm just gonna hide them
-*/
-.caption {
-  display: none;
 }
