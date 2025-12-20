@@ -88,7 +88,7 @@
         var jsCode = document.createElement("script");
         jsCode.setAttribute(
             "src",
-            "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.1/Readability.min.js"
+            "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.2/Readability.min.js"
         );
 
         window.cleanHtml = function() {
@@ -121,7 +121,7 @@
                     var cleanStyle = document.createElement("link");
                     cleanStyle.setAttribute(
                         "href",
-                        "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.1/css/clean.css"
+                        "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.2/css/clean.css"
                     );
                     cleanStyle.setAttribute("rel", "stylesheet");
                     document.head.appendChild(cleanStyle);
