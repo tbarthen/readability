@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Readability Reader View
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.0.4
 // @description  Toggle reader view on any webpage with keyboard shortcut (Ctrl+Shift+R) or floating button
 // @author       tbarthen
 // @match        *://*/*
 // @grant        none
 // @run-at       document-idle
+// @updateURL    https://raw.githubusercontent.com/tbarthen/readability/master/readability-userscript.user.js
+// @downloadURL  https://raw.githubusercontent.com/tbarthen/readability/master/readability-userscript.user.js
 // ==/UserScript==
 
 (function() {
