@@ -107,6 +107,10 @@
                 if (article && article.content) {
                     document.children[0].innerHTML = article.content;
 
+                    // Remove leading <hr> elements
+                    var leadingHr = document.querySelector('article > hr:first-child, .page > hr:first-child');
+                    if (leadingHr) leadingHr.remove();
+
                     // Add title
                     var articleTitle = document.createElement("h1");
                     articleTitle.classList.add("articleTitle");
