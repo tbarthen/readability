@@ -12,6 +12,9 @@
 (function() {
     'use strict';
 
+    // Only run in top-level window, not iframes or dialogs
+    if (window !== window.top) return;
+
     let readerActive = false;
     let originalHTML = null;
     let originalTitle = null;
