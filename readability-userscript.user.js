@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Readability Reader View
 // @namespace    http://tampermonkey.net/
-// @version      1.0.4
+// @version      1.0.5
 // @description  Toggle reader view on any webpage with keyboard shortcut (Ctrl+Shift+R) or floating button
 // @author       tbarthen
 // @match        *://*/*
@@ -21,6 +21,9 @@
     let originalHTML = null;
     let originalTitle = null;
     let floatingButton = null;
+    let imageToggleButton = null;
+    let imagesVisible = true;
+    let imageHideStyle = null;
 
     // Create floating button
     function createFloatingButton() {
@@ -66,6 +69,68 @@
         floatingButton.addEventListener('click', toggleReaderView);
 
         document.body.appendChild(floatingButton);
+    }
+
+    // Create image toggle button (appears above close button in reader mode)
+    function createImageToggleButton() {
+        imageToggleButton = document.createElement('div');
+        imageToggleButton.id = 'readability-image-toggle-btn';
+        imageToggleButton.innerHTML = '🖼️';
+        imageToggleButton.title = 'Hide Images';
+
+        Object.assign(imageToggleButton.style, {
+            position: 'fixed',
+            bottom: '80px',
+            right: '20px',
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            backgroundColor: '#f06040',
+            color: 'white',
+            fontSize: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            zIndex: '999999',
+            transition: 'all 0.3s ease',
+            userSelect: 'none',
+            fontFamily: 'Arial, sans-serif'
+        });
+
+        imageToggleButton.addEventListener('mouseenter', function() {
+            imageToggleButton.style.transform = 'scale(1.1)';
+            imageToggleButton.style.boxShadow = '0 6px 16px rgba(0,0,0,0.4)';
+        });
+
+        imageToggleButton.addEventListener('mouseleave', function() {
+            imageToggleButton.style.transform = 'scale(1)';
+            imageToggleButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+        });
+
+        imageToggleButton.addEventListener('click', toggleImages);
+
+        document.body.appendChild(imageToggleButton);
+    }
+
+    // Toggle image visibility
+    function toggleImages() {
+        imagesVisible = !imagesVisible;
+        if (imagesVisible) {
+            if (imageHideStyle) {
+                imageHideStyle.remove();
+                imageHideStyle = null;
+            }
+            imageToggleButton.style.opacity = '1';
+            imageToggleButton.title = 'Hide Images';
+        } else {
+            imageHideStyle = document.createElement('style');
+            imageHideStyle.textContent = 'img, picture, figure { display: none !important; }';
+            document.head.appendChild(imageHideStyle);
+            imageToggleButton.style.opacity = '0.5';
+            imageToggleButton.title = 'Show Images';
+        }
     }
 
     // Update button appearance based on reader state
@@ -158,8 +223,9 @@
                             }
                         });
 
-                        // Re-add the floating button
+                        // Re-add the floating buttons
                         createFloatingButton();
+                        createImageToggleButton();
                         readerActive = true;
                         updateButtonState();
                     }, 100);
@@ -187,6 +253,11 @@
             originalTitle = null;
         }
         readerActive = false;
+        imagesVisible = true;
+        imageToggleButton = null;
+        if (imageHideStyle) {
+            imageHideStyle = null;
+        }
 
         // Re-initialize everything
         setTimeout(function() {
