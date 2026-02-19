@@ -266,6 +266,8 @@ Readability.prototype = {
 
     this._simplifyNestedElements(articleContent);
 
+    this._removeLeadingNonContent(articleContent);
+
     if (!this._keepClasses) {
       // Remove classes.
       this._cleanClasses(articleContent);
@@ -549,6 +551,34 @@ Readability.prototype = {
       }
 
       node = this._getNextNode(node);
+    }
+  },
+
+  /**
+   * Remove leading non-content elements from the article. Metadata remnants
+   * like date/author lists and empty wrappers can survive earlier cleanup
+   * passes; this strips them from the top of the article until a real content
+   * element is found.
+   */
+  _removeLeadingNonContent: function (articleContent) {
+    var contentTags = ["P", "H1", "H2", "H3", "H4", "H5", "H6",
+      "FIGURE", "BLOCKQUOTE", "PRE", "IMG"];
+    var el = articleContent.firstElementChild;
+    while (el) {
+      var next = el.nextElementSibling;
+      var tag = el.tagName;
+
+      // Stop at elements that are clearly content.
+      if (contentTags.indexOf(tag) !== -1) break;
+
+      // Stop at elements that contain substantial paragraph content.
+      if (el.getElementsByTagName("p").length > 0 && el.textContent.trim().length > 80) break;
+
+      // Stop at tables (likely data content if they survived cleanup).
+      if (tag === "TABLE") break;
+
+      el.parentNode.removeChild(el);
+      el = next;
     }
   },
 
