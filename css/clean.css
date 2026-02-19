@@ -58,6 +58,10 @@ img {
    clear: left;
 }
 
+svg:not([width]):not([height]) {
+  display: none;
+}
+
 a {
   color: #f06040;
   text-decoration: none;
