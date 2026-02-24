@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Readability Reader View
 // @namespace    http://tampermonkey.net/
-// @version      1.0.8
+// @version      1.0.9
 // @description  Toggle reader view on any webpage with keyboard shortcut (Ctrl+Shift+R) or floating button
 // @author       tbarthen
 // @match        *://*/*
@@ -178,7 +178,7 @@
         var jsCode = document.createElement("script");
         jsCode.setAttribute(
             "src",
-            "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.7/Readability.min.js"
+            "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.8/Readability.min.js"
         );
 
         window.cleanHtml = function() {
@@ -222,7 +222,7 @@
                     var cleanStyle = document.createElement("link");
                     cleanStyle.setAttribute(
                         "href",
-                        "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.7/css/clean.css"
+                        "https://cdn.jsdelivr.net/gh/tbarthen/readability@1.0.8/css/clean.css"
                     );
                     cleanStyle.setAttribute("rel", "stylesheet");
                     document.head.appendChild(cleanStyle);
