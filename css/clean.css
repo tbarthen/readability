@@ -22,6 +22,7 @@ body {
   margin: 2rem auto;
   background: #fff;
   padding: 1rem;
+  box-sizing: border-box;
 }
 
 h1 {
@@ -52,7 +53,7 @@ ol {
 }
 img {
    padding: 0 1.5em 1.5em 0;
-   max-width: 40em;
+   max-width: min(40em, 100%);
    height: auto;
    float: left;
    clear: left;
