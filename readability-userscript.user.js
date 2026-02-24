@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Readability Reader View
 // @namespace    http://tampermonkey.net/
-// @version      1.0.7
+// @version      1.0.8
 // @description  Toggle reader view on any webpage with keyboard shortcut (Ctrl+Shift+R) or floating button
 // @author       tbarthen
 // @match        *://*/*
@@ -24,6 +24,7 @@
     let imageToggleButton = null;
     let imagesVisible = true;
     let imageHideStyle = null;
+    let controlsTimeout = null;
 
     // Create floating button
     function createFloatingButton() {
@@ -133,6 +134,25 @@
         }
     }
 
+    // Auto-hide controls after inactivity
+    function showControls() {
+        if (floatingButton) floatingButton.style.opacity = '1';
+        if (imageToggleButton) {
+            imageToggleButton.style.opacity = imagesVisible ? '1' : '0.5';
+        }
+        clearTimeout(controlsTimeout);
+        controlsTimeout = setTimeout(hideControls, 3000);
+    }
+
+    function hideControls() {
+        if (floatingButton) floatingButton.style.opacity = '0.15';
+        if (imageToggleButton) imageToggleButton.style.opacity = '0.15';
+    }
+
+    function onUserActivity() {
+        if (readerActive) showControls();
+    }
+
     // Update button appearance based on reader state
     function updateButtonState() {
         if (floatingButton) {
@@ -176,6 +196,17 @@
 
                 if (article && article.content) {
                     document.children[0].innerHTML = article.content;
+
+                    // Ensure proper viewport for fixed positioning
+                    var viewport = document.createElement('meta');
+                    viewport.name = 'viewport';
+                    viewport.content = 'width=device-width, initial-scale=1';
+                    document.head.appendChild(viewport);
+
+                    // Inject button positioning overrides
+                    var btnStyle = document.createElement('style');
+                    btnStyle.textContent = '#readability-toggle-btn, #readability-image-toggle-btn { position: fixed !important; z-index: 999999 !important; }';
+                    document.head.appendChild(btnStyle);
 
                     // Remove leading <hr> elements
                     var leadingHr = document.querySelector('article > hr:first-child, .page > hr:first-child');
@@ -228,6 +259,12 @@
                         createImageToggleButton();
                         readerActive = true;
                         updateButtonState();
+                        showControls();
+
+                        // Show controls on any user interaction
+                        document.addEventListener('touchstart', onUserActivity);
+                        document.addEventListener('click', onUserActivity);
+                        document.addEventListener('scroll', onUserActivity);
                     }, 100);
                 } else {
                     alert('Could not parse this page for reader view. The page may not have article content.');
@@ -258,6 +295,10 @@
         if (imageHideStyle) {
             imageHideStyle = null;
         }
+        clearTimeout(controlsTimeout);
+        document.removeEventListener('touchstart', onUserActivity);
+        document.removeEventListener('click', onUserActivity);
+        document.removeEventListener('scroll', onUserActivity);
 
         // Re-initialize everything
         setTimeout(function() {
