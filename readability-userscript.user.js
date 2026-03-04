@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Readability Reader View
 // @namespace    http://tampermonkey.net/
-// @version      1.0.9
+// @version      1.1.0
 // @description  Toggle reader view on any webpage with keyboard shortcut (Ctrl+Shift+R) or floating button
 // @author       tbarthen
 // @match        *://*/*
@@ -25,6 +25,93 @@
     let imagesVisible = true;
     let imageHideStyle = null;
     let controlsTimeout = null;
+    let isDragging = false;
+    let dragStartX, dragStartY, btnStartX, btnStartY;
+    const DRAG_THRESHOLD = 5;
+    const STORAGE_KEY = 'readability-btn-pos';
+
+    function getSavedPosition() {
+        try {
+            var pos = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (pos && typeof pos.right === 'number' && typeof pos.bottom === 'number') return pos;
+        } catch(e) {}
+        return { right: 20, bottom: 20 };
+    }
+
+    function savePosition(right, bottom) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ right: right, bottom: bottom })); } catch(e) {}
+    }
+
+    function clampPosition(right, bottom) {
+        var maxRight = window.innerWidth - 50;
+        var maxBottom = window.innerHeight - 50;
+        return {
+            right: Math.max(0, Math.min(right, maxRight)),
+            bottom: Math.max(0, Math.min(bottom, maxBottom))
+        };
+    }
+
+    function applyPosition(pos) {
+        var clamped = clampPosition(pos.right, pos.bottom);
+        if (floatingButton) {
+            floatingButton.style.right = clamped.right + 'px';
+            floatingButton.style.bottom = clamped.bottom + 'px';
+        }
+        if (imageToggleButton) {
+            imageToggleButton.style.right = clamped.right + 'px';
+            imageToggleButton.style.bottom = (clamped.bottom + 60) + 'px';
+        }
+    }
+
+    function onDragStart(e) {
+        var touch = e.touches ? e.touches[0] : e;
+        isDragging = false;
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+        var pos = getSavedPosition();
+        btnStartX = pos.right;
+        btnStartY = pos.bottom;
+        document.addEventListener('mousemove', onDragMove);
+        document.addEventListener('mouseup', onDragEnd);
+        document.addEventListener('touchmove', onDragMove, { passive: false });
+        document.addEventListener('touchend', onDragEnd);
+    }
+
+    function onDragMove(e) {
+        var touch = e.touches ? e.touches[0] : e;
+        var dx = touch.clientX - dragStartX;
+        var dy = touch.clientY - dragStartY;
+        if (!isDragging && Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+        if (!isDragging) {
+            isDragging = true;
+            if (floatingButton) floatingButton.style.transition = 'none';
+            if (imageToggleButton) imageToggleButton.style.transition = 'none';
+        }
+        if (e.cancelable) e.preventDefault();
+        var newRight = btnStartX - dx;
+        var newBottom = btnStartY + dy;
+        applyPosition({ right: newRight, bottom: newBottom });
+    }
+
+    function onDragEnd() {
+        document.removeEventListener('mousemove', onDragMove);
+        document.removeEventListener('mouseup', onDragEnd);
+        document.removeEventListener('touchmove', onDragMove);
+        document.removeEventListener('touchend', onDragEnd);
+        if (floatingButton) floatingButton.style.transition = 'all 0.3s ease';
+        if (imageToggleButton) imageToggleButton.style.transition = 'all 0.3s ease';
+        if (isDragging && floatingButton) {
+            savePosition(
+                parseInt(floatingButton.style.right) || 20,
+                parseInt(floatingButton.style.bottom) || 20
+            );
+        }
+    }
+
+    function attachDrag(el) {
+        el.addEventListener('mousedown', onDragStart);
+        el.addEventListener('touchstart', onDragStart, { passive: true });
+    }
 
     // Create floating button
     function createFloatingButton() {
@@ -34,10 +121,12 @@
         floatingButton.title = 'Toggle Reader View (Ctrl+Shift+R)';
 
         // Style the button
+        var pos = getSavedPosition();
+        var clamped = clampPosition(pos.right, pos.bottom);
         Object.assign(floatingButton.style, {
             position: 'fixed',
-            bottom: '20px',
-            right: '20px',
+            bottom: clamped.bottom + 'px',
+            right: clamped.right + 'px',
             width: '50px',
             height: '50px',
             borderRadius: '50%',
@@ -66,9 +155,13 @@
             floatingButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
         });
 
-        // Click handler
-        floatingButton.addEventListener('click', toggleReaderView);
+        // Click handler (suppressed during drag)
+        floatingButton.addEventListener('click', function(e) {
+            if (isDragging) { isDragging = false; return; }
+            toggleReaderView();
+        });
 
+        attachDrag(floatingButton);
         document.body.appendChild(floatingButton);
     }
 
@@ -79,10 +172,12 @@
         imageToggleButton.innerHTML = '🖼️';
         imageToggleButton.title = 'Hide Images';
 
+        var pos = getSavedPosition();
+        var clamped = clampPosition(pos.right, pos.bottom);
         Object.assign(imageToggleButton.style, {
             position: 'fixed',
-            bottom: '80px',
-            right: '20px',
+            bottom: (clamped.bottom + 60) + 'px',
+            right: clamped.right + 'px',
             width: '50px',
             height: '50px',
             borderRadius: '50%',
@@ -110,8 +205,12 @@
             imageToggleButton.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
         });
 
-        imageToggleButton.addEventListener('click', toggleImages);
+        imageToggleButton.addEventListener('click', function(e) {
+            if (isDragging) { isDragging = false; return; }
+            toggleImages();
+        });
 
+        attachDrag(imageToggleButton);
         document.body.appendChild(imageToggleButton);
     }
 
